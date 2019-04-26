@@ -133,6 +133,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
+        // selectorProvider用于创建通道，在NioEventLoopGroup的构造函数中会创建
         if (selectorProvider == null) {
             throw new NullPointerException("selectorProvider");
         }
@@ -155,24 +156,37 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             this.selector = unwrappedSelector;
         }
 
+        /**
+         * Netty包装的selector
+         * @param unwrappedSelector JDK原始的selector
+         * @param selector Netty实现的selector
+         */
         SelectorTuple(Selector unwrappedSelector, Selector selector) {
             this.unwrappedSelector = unwrappedSelector;
             this.selector = selector;
         }
     }
 
+    /**
+     * 开启一个Selector，返回一个包装的SelectorTuple，里面包含JDK原始的Selector（unwrappedSelector）和一个Netty实现的Selector。
+     *
+     * @return
+     */
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;
         try {
+            // 开启一个JDK原始的Selector
             unwrappedSelector = provider.openSelector();
         } catch (IOException e) {
             throw new ChannelException("failed to open a new selector", e);
         }
 
+        // 如果禁用Netty的最佳优化（通过系统属性io.netty.noKeySetOptimization控制）,SelectorTuple中的unwrappedSelector和selector都为JDK原始的Selector。
         if (DISABLE_KEY_SET_OPTIMIZATION) {
             return new SelectorTuple(unwrappedSelector);
         }
 
+        // 获取JDK原始的Selector实现类进行改造
         Object maybeSelectorImplClass = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
@@ -207,6 +221,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
                     Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
 
+                    // 如果是Java9以上的版本，并且有unsafe模块，就使用sun.misc.Unsafe偏移量的方式替换SelectionKeySet
+                    // 如果没有得到偏移量，就使用反射的方式实现
                     if (PlatformDependent.javaVersion() >= 9 && PlatformDependent.hasUnsafe()) {
                         // Let us try to use sun.misc.Unsafe to replace the SelectionKeySet.
                         // This allows us to also do this in Java9+ without any extra flags.
@@ -233,6 +249,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         return cause;
                     }
 
+                    // 使用反射的方式修改selector中的selectedKeys字段和publicSelectedKeys字段
                     selectedKeysField.set(unwrappedSelector, selectedKeySet);
                     publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
                     return null;
