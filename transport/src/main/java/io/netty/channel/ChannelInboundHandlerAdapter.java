@@ -16,6 +16,8 @@
 package io.netty.channel;
 
 /**
+ * 入站事件处理器的适配器，一般要在应用层添加入站事件处理器，继承此类，重写需要用到的事件处理方法。
+ * <br/>
  * Abstract base class for {@link ChannelInboundHandler} implementations which provide
  * implementations of all of their methods.
  *

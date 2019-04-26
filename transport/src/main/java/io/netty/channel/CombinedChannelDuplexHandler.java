@@ -26,6 +26,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.net.SocketAddress;
 
 /**
+ * 和ChannelDuplexHandler不一样，它是将两个已有的入站和出站事件处理器组合成一个事件处理器。
+ * <br/>
  *  Combines a {@link ChannelInboundHandler} and a {@link ChannelOutboundHandler} into one {@link ChannelHandler}.
  */
 public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O extends ChannelOutboundHandler>
