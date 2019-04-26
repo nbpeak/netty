@@ -35,11 +35,20 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+/**
+ * 代表{@link ChannelHandler}和{@link ChannelPipeline}之间的关联，每当有{@link ChannelHandler}添加到{@link ChannelPipeline}中时，
+ * 都会创建一个context。context的主要功能是管理它所关联的handler和在同一个pipeline中的其它handler之间的交互。
+ * <br/>
+ * fire*开头的方法是触发事件，调用下一个相同类型handler（inbound/outbound）的方法。
+ * invoke开头的静态方法是由pipeline中fire*方法调用，接收的是pipeline中头部的context。
+ */
 abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
+    // 当前context的下一个
     volatile AbstractChannelHandlerContext next;
+    // 当前context的前一个
     volatile AbstractChannelHandlerContext prev;
 
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
@@ -63,7 +72,9 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
      */
     private static final int INIT = 0;
 
+    // 入站类型
     private final boolean inbound;
+    // 出站类型
     private final boolean outbound;
     private final DefaultChannelPipeline pipeline;
     private final String name;
@@ -334,10 +345,16 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
 
     @Override
     public ChannelHandlerContext fireChannelRead(final Object msg) {
+        // 调用下一个context
         invokeChannelRead(findContextInbound(), msg);
         return this;
     }
 
+    /**
+     * 外部调用的入口
+     * @param next
+     * @param msg
+     */
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
@@ -901,6 +918,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return false;
     }
 
+    /**
+     * 在链中找到下一个Inbound的context
+     * @return
+     */
     private AbstractChannelHandlerContext findContextInbound() {
         AbstractChannelHandlerContext ctx = this;
         do {
@@ -909,6 +930,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return ctx;
     }
 
+    /**
+     * 在链中找到前一个outbound的context
+     * @return
+     */
     private AbstractChannelHandlerContext findContextOutbound() {
         AbstractChannelHandlerContext ctx = this;
         do {
