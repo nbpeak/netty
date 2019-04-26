@@ -40,6 +40,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
+ * 管道链，链中有一个头和尾
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
@@ -61,7 +62,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
+    // pipline中的头
     final AbstractChannelHandlerContext head;
+    // pipline中的尾巴
     final AbstractChannelHandlerContext tail;
 
     private final Channel channel;
@@ -195,14 +198,23 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return addLast(null, name, handler);
     }
 
+    /**
+     * 接收一个ChannelHandler，将此handler防在一个新的context中，添加到链的尾部
+     * @param group
+     * @param name
+     * @param handler
+     * @return
+     */
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
 
+            // 使用ChannelHandler创建一个新的Context
             newCtx = newContext(group, filterName(name, handler), handler);
 
+            // 将包含了ChannelHandler的Context加到最后
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
@@ -224,11 +236,20 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    /**
+     * 将新的context加到链的尾部
+     * @param newCtx
+     */
     private void addLast0(AbstractChannelHandlerContext newCtx) {
+        // 取出尾巴前面一个，即倒数第二个
         AbstractChannelHandlerContext prev = tail.prev;
+        // 将新context的前面一个指向尾巴的前一个
         newCtx.prev = prev;
+        // 将新context的后一个指向尾巴
         newCtx.next = tail;
+        // 将前面倒数第二个的下一个指向新的context
         prev.next = newCtx;
+        // 将尾巴的前一个指向新的context，使新的context成为倒数第二
         tail.prev = newCtx;
     }
 
@@ -1184,6 +1205,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     /**
+     * 当事件消息达到pipeline的尾端时，释放消息
      * Called once a message hit the end of the {@link ChannelPipeline} without been handled by the user
      * in {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)}. This method is responsible
      * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
