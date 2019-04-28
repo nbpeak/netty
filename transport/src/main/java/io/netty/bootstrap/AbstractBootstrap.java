@@ -95,6 +95,16 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 指定一个传输通道的类型：<br/>
+     * {@link io.netty.channel.socket.nio.NioServerSocketChannel}-基于NIO的服务端传输通道<br/>
+     * {@link io.netty.channel.socket.nio.NioSocketChannel}-基于NIO的客户端传输通道<br/>
+     * {@link io.netty.channel.socket.oio.OioServerSocketChannel}-基于BIO的服务端传输通道，过时的，推荐使用NIO、EPOOL<br/>
+     * {@link io.netty.channel.socket.oio.OioSocketChannel}-基于BIO的客户端传输通道，过时的，推荐使用NIO、EPOOL<br/>
+     * {@link io.netty.channel.local.LocalServerChannel}-基于JVM内部通信的服务端通道<br/>
+     * {@link io.netty.channel.local.LocalChannel}-基于JVM内部通信的客户端通道<br/>
+     * {@link io.netty.channel.embedded.EmbeddedChannel}-Netty提供的一种额外传输，用于测试<br/>
+     * {@link io.netty.channel.epoll.EpollServerSocketChannel}-基于Epool的服务端传输通道，只能在Linux上使用<br/>
+     * {@link io.netty.channel.epoll.EpollSocketChannel}-基于Epool的客户端传输通道，只能在Linux上使用<br/>
      * The {@link Class} which is used to create {@link Channel} instances from.
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
      * {@link Channel} implementation has no no-args constructor.
@@ -164,6 +174,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 指定传输通道的选项，可用选项见：{@link ChannelOption}<br/>
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
@@ -278,6 +289,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return doBind(localAddress);
     }
 
+    /**
+     * 将ServerSocketChannel注册到selector并绑定端口，启动服务
+     *
+     * @param localAddress
+     * @return
+     */
     private ChannelFuture doBind(final SocketAddress localAddress) {
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
@@ -314,9 +331,14 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
+    /**
+     * 初始化并且注册Channel
+     * @return
+     */
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            // 通过channel方法传入的类创建Channel
             channel = channelFactory.newChannel();
             init(channel);
         } catch (Throwable t) {
@@ -330,6 +352,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // 这里的group就是bootstrap.group()方法传入的parentGroup
+        // register是SingleThreadEventLoop中的register
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
@@ -363,6 +387,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
+                    // 绑定端口
                     channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
                     promise.setFailure(regFuture.cause());
@@ -372,6 +397,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 初始化处理器
+     * <br/>
      * the {@link ChannelHandler} to use for serving the requests.
      */
     public B handler(ChannelHandler handler) {

@@ -117,6 +117,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return channel().config().getAllocator();
     }
 
+    /**
+     * 获取当前通道的eventloop
+     * @return EventLoop（NioEventLoop/...）
+     */
     @Override
     public EventExecutor executor() {
         if (executor == null) {

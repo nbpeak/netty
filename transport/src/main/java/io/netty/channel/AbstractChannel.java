@@ -475,8 +475,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
+            // 指定channel的eventloop
             AbstractChannel.this.eventLoop = eventLoop;
 
+            // 第一次执行时，没有线程，会返回false
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
@@ -506,6 +508,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                // 将channel注册到selector
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -514,6 +517,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // user may already fire events through the pipeline in the ChannelFutureListener.
                 pipeline.invokeHandlerAddedIfNeeded();
 
+                //触发future的监听，如果调了bind方法，会调AbstractBootstrap.doBind中添加的Listener
                 safeSetSuccess(promise);
                 pipeline.fireChannelRegistered();
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
