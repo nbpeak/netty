@@ -275,23 +275,23 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return this;
     }
 
-    final void ensureWritable0(int minWritableBytes) {
-        ensureAccessible();
-        if (minWritableBytes <= writableBytes()) {
+    final void ensureWritable0(int minWritableBytes) {// 确保可写
+        ensureAccessible();// 检查ByteBuf对象的引用计数器，如果为0，则不允许再进行操作
+        if (minWritableBytes <= writableBytes()) {// 如果可写大小超过需要写入的大小就返回，否则重新调整容量
             return;
         }
         if (checkBounds) {
-            if (minWritableBytes > maxCapacity - writerIndex) {
+            if (minWritableBytes > maxCapacity - writerIndex) {// 如果需要写入的大小超出了最大可写范围就报错
                 throw new IndexOutOfBoundsException(String.format(
                         "writerIndex(%d) + minWritableBytes(%d) exceeds maxCapacity(%d): %s",
                         writerIndex, minWritableBytes, maxCapacity, this));
             }
         }
 
-        // Normalize the current capacity to the power of 2.
+        // Normalize the current capacity to the power of 2. 重新计算新容量，当前已经用过的+现在需要的
         int newCapacity = alloc().calculateNewCapacity(writerIndex + minWritableBytes, maxCapacity);
 
-        // Adjust to the new capacity.
+        // Adjust to the new capacity.   设置新容量
         capacity(newCapacity);
     }
 
@@ -1063,7 +1063,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf writeBytes(byte[] src, int srcIndex, int length) {
-        ensureWritable(length);
+        ensureWritable(length);// 检查是否有足够的可写空间，是否扩容
         setBytes(writerIndex, src, srcIndex, length);
         writerIndex += length;
         return this;
