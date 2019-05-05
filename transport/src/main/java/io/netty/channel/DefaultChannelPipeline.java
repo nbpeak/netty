@@ -1216,7 +1216,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
                             "Please check your pipeline configuration.", msg);
         } finally {
-            ReferenceCountUtil.release(msg);
+            ReferenceCountUtil.release(msg); // 释放buf的引用
         }
     }
 
