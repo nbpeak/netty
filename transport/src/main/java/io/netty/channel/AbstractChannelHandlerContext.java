@@ -112,6 +112,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return pipeline;
     }
 
+    /**
+     * 获取缓冲区分配器
+     * @return
+     */
     @Override
     public ByteBufAllocator alloc() {
         return channel().config().getAllocator();
