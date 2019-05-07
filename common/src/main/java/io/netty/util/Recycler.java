@@ -157,16 +157,16 @@ public abstract class Recycler<T> {
         if (maxCapacityPerThread == 0) {
             return newObject((Handle<T>) NOOP_HANDLE);
         }
-        Stack<T> stack = threadLocal.get();
-        DefaultHandle<T> handle = stack.pop();
+        Stack<T> stack = threadLocal.get();// peak:在线程变量中维护了一个栈
+        DefaultHandle<T> handle = stack.pop(); // 弹出一个handle对象
         if (handle == null) {
-            handle = stack.newHandle();
+            handle = stack.newHandle();// 创建一个新Handle
             handle.value = newObject(handle);
         }
-        return (T) handle.value;
+        return (T) handle.value;// 返回buf对象PooledUnsafeDirectByteBuf
     }
 
-    /**
+    /**peak:回收复用，o就是要回收的对象
      * @deprecated use {@link Handle#recycle(Object)}.
      */
     @Deprecated

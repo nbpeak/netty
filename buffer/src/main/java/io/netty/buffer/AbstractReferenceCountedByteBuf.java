@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static io.netty.util.internal.ObjectUtil.checkPositive;
 
-/**
+/**peak: Buf的引用计数器，用于内存复用，有一个计数器refCnt，retain()计数器加一，release()计数器减一。直到计数器为0，才调用deallocate()释放，deallocate()方法由具体的buf自己实现。
  * Abstract base class for {@link ByteBuf} implementations that count references.
  */
 public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
@@ -140,7 +140,7 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
 
     private boolean release0(int decrement) {
         int rawCnt = nonVolatileRawCnt(), realCnt = toLiveRealCnt(rawCnt, decrement);
-        if (decrement == realCnt) {
+        if (decrement == realCnt) {// peak:
             if (refCntUpdater.compareAndSet(this, rawCnt, 1)) {
                 deallocate();
                 return true;

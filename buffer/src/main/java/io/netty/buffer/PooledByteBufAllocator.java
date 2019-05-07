@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+/** peak:池化的ByteBUf分配器，可以实现内存复用 */
 public class PooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PooledByteBufAllocator.class);
@@ -99,7 +99,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
                                 defaultMinNumArena,
                                 PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3)));
 
-        // cache sizes
+        // cache sizes  peak:缓存默认值
         DEFAULT_TINY_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.tinyCacheSize", 512);
         DEFAULT_SMALL_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.smallCacheSize", 256);
         DEFAULT_NORMAL_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.normalCacheSize", 64);
@@ -319,13 +319,13 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     @Override
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
-        PoolThreadCache cache = threadCache.get();
-        PoolArena<ByteBuffer> directArena = cache.directArena;
-
+        PoolThreadCache cache = threadCache.get();// peak:从当前线程中获取cache对象
+        PoolArena<ByteBuffer> directArena = cache.directArena; // 从cache中去取arena
+        // arena可以理解为一个netty提供的实际进行buf分配和管理的工具
         final ByteBuf buf;
         if (directArena != null) {
             buf = directArena.allocate(cache, initialCapacity, maxCapacity);
-        } else {
+        } else {// 如果没有arena，就用unpool
             buf = PlatformDependent.hasUnsafe() ?
                     UnsafeByteBufUtil.newUnsafeDirectByteBuf(this, initialCapacity, maxCapacity) :
                     new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);
@@ -376,21 +376,21 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         return PlatformDependent.directBufferPreferred();
     }
 
-    /**
+    /**peak: 获取tiny默认的大小，默认是512
      * Default tiny cache size - System Property: io.netty.allocator.tinyCacheSize - default 512
      */
     public static int defaultTinyCacheSize() {
         return DEFAULT_TINY_CACHE_SIZE;
     }
 
-    /**
+    /**获取small默认的大小，默认实256
      * Default small cache size - System Property: io.netty.allocator.smallCacheSize - default 256
      */
     public static int defaultSmallCacheSize() {
         return DEFAULT_SMALL_CACHE_SIZE;
     }
 
-    /**
+    /**获取normal默认大小，默认是64
      * Default normal cache size - System Property: io.netty.allocator.normalCacheSize - default 64
      */
     public static int defaultNormalCacheSize() {

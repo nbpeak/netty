@@ -35,7 +35,7 @@ import java.util.concurrent.ThreadFactory;
  */
 public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
-    /**
+    /**peak:默认的线程数取系统属性配置的io.netty.eventLoopThreads或当前处理器数量*2
      * Create a new instance using the default number of threads, the default {@link ThreadFactory} and
      * the {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
@@ -43,7 +43,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         this(0);
     }
 
-    /**
+    /**peak:指定线程数
      * Create a new instance using the specified number of threads, {@link ThreadFactory} and the
      * {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
@@ -51,7 +51,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         this(nThreads, (Executor) null);
     }
 
-    /**
+    /**peak:会创建一个SelectorProvider，用于创建Selector
      * Create a new instance using the specified number of threads, the given {@link ThreadFactory} and the
      * {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
@@ -120,7 +120,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
             ((NioEventLoop) e).rebuildSelector();
         }
     }
-
+    /** peak:创建一个新的EventLoop，在MultithreadEventExecutorGroup的构造函数中调用 */
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],

@@ -385,7 +385,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
     }
 
-    /**
+    /**peak:执行线程中的任务
      * Poll all tasks from the task queue and run them via {@link Runnable#run()} method.  This method stops running
      * the tasks in the task queue and returns if it ran longer than {@code timeoutNanos}.
      */
@@ -745,7 +745,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
         return isTerminated();
     }
-
+    /** peak:执行任务，如果当前的线程是此eventloop的线程，就会将任务防在任务队列中，否则会开启一个线程 */
     @Override
     public void execute(Runnable task) {
         if (task == null) {
@@ -891,7 +891,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void doStartThread() {
         assert thread == null;
-        executor.execute(new Runnable() {
+        executor.execute(new Runnable() {// peak:开启一个线程，开始执行
             @Override
             public void run() {
                 thread = Thread.currentThread();

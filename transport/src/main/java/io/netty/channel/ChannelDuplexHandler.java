@@ -17,7 +17,7 @@ package io.netty.channel;
 
 import java.net.SocketAddress;
 
-/**
+/**peak:入站和出站事件的组合处理器，即可以接收入站事件，又可以接收出站事件。由于Java只能继承一个类。所以，它只继承了ChannelInboundHandlerAdapter，实现ChannelOutboundHandler接口。ChannelDuplexHandler类的内部实现，和ChannelOutboundHandlerAdapter一模一样。
  * {@link ChannelHandler} implementation which represents a combination out of a {@link ChannelInboundHandler} and
  * the {@link ChannelOutboundHandler}.
  *

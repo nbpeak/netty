@@ -135,7 +135,7 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
 
     @Override
     public ByteBuf ioBuffer(int initialCapacity) {
-        if (PlatformDependent.hasUnsafe()) {
+        if (PlatformDependent.hasUnsafe()) {// peak:如果有unsafe，就分配堆外内存
             return directBuffer(initialCapacity);
         }
         return heapBuffer(initialCapacity);
@@ -154,7 +154,7 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
         return heapBuffer(DEFAULT_INITIAL_CAPACITY, DEFAULT_MAX_CAPACITY);
     }
 
-    @Override
+    @Override// peak:分配一个堆内存，最大是int的max
     public ByteBuf heapBuffer(int initialCapacity) {
         return heapBuffer(initialCapacity, DEFAULT_MAX_CAPACITY);
     }
@@ -247,32 +247,32 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
         return StringUtil.simpleClassName(this) + "(directByDefault: " + directByDefault + ')';
     }
 
-    @Override
+    @Override// peak:计算新容量
     public int calculateNewCapacity(int minNewCapacity, int maxCapacity) {
         checkPositiveOrZero(minNewCapacity, "minNewCapacity");
-        if (minNewCapacity > maxCapacity) {
+        if (minNewCapacity > maxCapacity) {// 写入需要的容量大于最大容量就报错
             throw new IllegalArgumentException(String.format(
                     "minNewCapacity: %d (expected: not greater than maxCapacity(%d)",
                     minNewCapacity, maxCapacity));
         }
-        final int threshold = CALCULATE_THRESHOLD; // 4 MiB page
+        final int threshold = CALCULATE_THRESHOLD; // 4 MiB page   阈值
 
-        if (minNewCapacity == threshold) {
+        if (minNewCapacity == threshold) {// 如果最小写入大小是4MB就返回
             return threshold;
         }
 
         // If over threshold, do not double but just increase by threshold.
-        if (minNewCapacity > threshold) {
-            int newCapacity = minNewCapacity / threshold * threshold;
-            if (newCapacity > maxCapacity - threshold) {
+        if (minNewCapacity > threshold) {// 如果超过阈值，按阈值增加
+            int newCapacity = minNewCapacity / threshold * threshold; // 新容量=新容量最小要求/阈值*阈值，使新容量是4MB的倍数
+            if (newCapacity > maxCapacity - threshold) {// 接近最大值，离最大值不足4MB时，新容量就是最大值
                 newCapacity = maxCapacity;
-            } else {
+            } else {// 否则，新容量=新容量最小要求/阈值*阈值 + 阈值
                 newCapacity += threshold;
             }
             return newCapacity;
         }
 
-        // Not over threshold. Double up to 4 MiB, starting from 64.
+        // Not over threshold. Double up to 4 MiB, starting from 64.  未超过4MB时，从64字节开始，每次增加1倍
         int newCapacity = 64;
         while (newCapacity < minNewCapacity) {
             newCapacity <<= 1;

@@ -177,18 +177,18 @@ import java.lang.annotation.Target;
  */
 public interface ChannelHandler {
 
-    /**
+    /**peak:当把ChannelHandler添加到ChannelPipeline中时被调用
      * Gets called after the {@link ChannelHandler} was added to the actual context and it's ready to handle events.
      */
     void handlerAdded(ChannelHandlerContext ctx) throws Exception;
 
-    /**
+    /**peak:当从ChannelPipeline中移除ChannelHandler时被调用
      * Gets called after the {@link ChannelHandler} was removed from the actual context and it doesn't handle events
      * anymore.
      */
     void handlerRemoved(ChannelHandlerContext ctx) throws Exception;
 
-    /**
+    /**peak:当处理过程中在ChannelPipeline中有错误产生时被调用
      * Gets called if a {@link Throwable} was thrown.
      *
      * @deprecated is part of {@link ChannelInboundHandler}
@@ -196,7 +196,7 @@ public interface ChannelHandler {
     @Deprecated
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception;
 
-    /**
+    /**peak:一个ChannelHandler可以从属多个ChannelPipeline，所以它也可以绑定到多个ChannelHandlerContext实例。<br/>对于这种用法（指在多个ChannelPipeline中共享同一个ChannelHandler），对应的ChannelHandler必须要使用@Sharable注解标注；<br/>否则，如果将一个ChannelHandler添加到多个ChannelPipeline时将会触发异常。<br/>所以，如果要将一个ChannelHandler用于多个ChannelPipeline，必须自己确保ChannelHandler是线程安全的，并且使用@Sharable注解。<br/>
      * Indicates that the same instance of the annotated {@link ChannelHandler}
      * can be added to one or more {@link ChannelPipeline}s multiple times
      * without a race condition.

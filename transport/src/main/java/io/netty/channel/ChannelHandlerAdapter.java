@@ -20,7 +20,7 @@ import io.netty.util.internal.InternalThreadLocalMap;
 
 import java.util.Map;
 
-/**
+/**peak:适配器，使子类可以不用实现接口的所有方法，只需要实现需要用到的事件处理方法。<br/>
  * Skeleton implementation of a {@link ChannelHandler}.
  */
 public abstract class ChannelHandlerAdapter implements ChannelHandler {

@@ -81,7 +81,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         this(newSocket(provider));
     }
 
-    /**
+    /**peak:接收一个NIO ServerSocketChannel<br/>
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {

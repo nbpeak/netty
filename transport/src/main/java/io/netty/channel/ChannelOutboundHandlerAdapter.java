@@ -17,7 +17,7 @@ package io.netty.channel;
 
 import java.net.SocketAddress;
 
-/**
+/**peak:出站事件处理器的适配器，一般要在应用层添加出站事件处理器，继承此类，重写需要用到的事件处理方法。<br/>
  * Skeleton implementation of a {@link ChannelOutboundHandler}. This implementation just forwards each method call via
  * the {@link ChannelHandlerContext}.
  */

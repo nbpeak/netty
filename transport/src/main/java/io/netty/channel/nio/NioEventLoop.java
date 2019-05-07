@@ -133,7 +133,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
-        if (selectorProvider == null) {
+        if (selectorProvider == null) {// peak:selectorProvider用于创建通道，在NioEventLoopGroup的构造函数中会创建
             throw new NullPointerException("selectorProvider");
         }
         if (strategy == null) {
@@ -154,25 +154,25 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             this.unwrappedSelector = unwrappedSelector;
             this.selector = unwrappedSelector;
         }
-
+        // peak:Netty包装的selector，unwrappedSelector是JDK原始的selector，selector是Netty实现的selector
         SelectorTuple(Selector unwrappedSelector, Selector selector) {
             this.unwrappedSelector = unwrappedSelector;
             this.selector = selector;
         }
     }
-
+    /** peak:开启一个Selector，返回一个包装的SelectorTuple，里面包含JDK原始的Selector（unwrappedSelector）和一个Netty实现的Selector。 */
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;
-        try {
+        try {// 开启一个JDK原始的Selector
             unwrappedSelector = provider.openSelector();
         } catch (IOException e) {
             throw new ChannelException("failed to open a new selector", e);
         }
-
+        // peak:如果禁用Netty的最佳优化（通过系统属性io.netty.noKeySetOptimization控制）,SelectorTuple中的unwrappedSelector和selector都为JDK原始的Selector。
         if (DISABLE_KEY_SET_OPTIMIZATION) {
             return new SelectorTuple(unwrappedSelector);
         }
-
+        // 获取JDK原始的Selector实现类进行改造
         Object maybeSelectorImplClass = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
@@ -206,7 +206,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 try {
                     Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
                     Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
-
+                    // peak:如果是Java9以上的版本，并且有unsafe模块，就使用sun.misc.Unsafe偏移量的方式替换SelectionKeySet
                     if (PlatformDependent.javaVersion() >= 9 && PlatformDependent.hasUnsafe()) {
                         // Let us try to use sun.misc.Unsafe to replace the SelectionKeySet.
                         // This allows us to also do this in Java9+ without any extra flags.
@@ -223,7 +223,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         }
                         // We could not retrieve the offset, lets try reflection as last-resort.
                     }
-
+                    // peak:如果没有得到偏移量，就使用反射的方式实现
                     Throwable cause = ReflectionUtil.trySetAccessible(selectedKeysField, true);
                     if (cause != null) {
                         return cause;
@@ -232,7 +232,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     if (cause != null) {
                         return cause;
                     }
-
+                    // peak:使用反射的方式修改selector中的selectedKeys字段和publicSelectedKeys字段
                     selectedKeysField.set(unwrappedSelector, selectedKeySet);
                     publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
                     return null;
@@ -627,7 +627,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
-    private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+    private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {// peak:处理连接的事件
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         if (!k.isValid()) {
             final EventLoop eventLoop;
@@ -674,7 +674,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
-                unsafe.read();
+                unsafe.read(); // peak:accept和read都执行unsafe的read方法
             }
         } catch (CancelledKeyException ignored) {
             unsafe.close(unsafe.voidPromise());

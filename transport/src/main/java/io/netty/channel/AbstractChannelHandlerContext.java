@@ -34,13 +34,13 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-
+/** peak:代表{@link ChannelHandler}和{@link ChannelPipeline}之间的关联，每当有{@link ChannelHandler}添加到{@link ChannelPipeline}中时，都会创建一个context。context的主要功能是管理它所关联的handler和在同一个pipeline中的其它handler之间的交互。<br/>fire*开头的方法是触发事件，调用下一个相同类型handler（inbound/outbound）的方法。invoke开头的静态方法是由pipeline中fire*方法调用，接收的是pipeline中头部的context。 */
 abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
-    volatile AbstractChannelHandlerContext next;
-    volatile AbstractChannelHandlerContext prev;
+    volatile AbstractChannelHandlerContext next;// 当前context的下一个
+    volatile AbstractChannelHandlerContext prev;// 当前context的前一个
 
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
@@ -63,8 +63,8 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
      */
     private static final int INIT = 0;
 
-    private final boolean inbound;
-    private final boolean outbound;
+    private final boolean inbound;// peak:入站类型
+    private final boolean outbound;// 出站类型
     private final DefaultChannelPipeline pipeline;
     private final String name;
     private final boolean ordered;
@@ -100,12 +100,12 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     public ChannelPipeline pipeline() {
         return pipeline;
     }
-
+    /** peak:获取缓冲区分配器 */
     @Override
     public ByteBufAllocator alloc() {
         return channel().config().getAllocator();
     }
-
+    /** peak:获取当前通道的eventloop @return EventLoop（NioEventLoop/...）*/
     @Override
     public EventExecutor executor() {
         if (executor == null) {
@@ -334,10 +334,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
 
     @Override
     public ChannelHandlerContext fireChannelRead(final Object msg) {
-        invokeChannelRead(findContextInbound(), msg);
+        invokeChannelRead(findContextInbound(), msg);// peak:调用下一个context
         return this;
     }
-
+    /** peak:外部调用的入口 */
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
@@ -900,7 +900,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         }
         return false;
     }
-
+    /** peak:在链中找到下一个Inbound的context */
     private AbstractChannelHandlerContext findContextInbound() {
         AbstractChannelHandlerContext ctx = this;
         do {
@@ -908,7 +908,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         } while (!ctx.inbound);
         return ctx;
     }
-
+    /** peak:在链中找到前一个outbound的context */
     private AbstractChannelHandlerContext findContextOutbound() {
         AbstractChannelHandlerContext ctx = this;
         do {

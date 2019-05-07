@@ -22,7 +22,7 @@ import io.netty.util.ConstantPool;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
-/**
+/**peak:ChannelOption允许以类型安全的方式配置ChannelConfig。支持哪个ChannelOption取决于ChannelConfig的实际实现，也可能取决于它所属传输的性质。<br/>
  * A {@link ChannelOption} allows to configure a {@link ChannelConfig} in a type-safe
  * way. Which {@link ChannelOption} is supported depends on the actual implementation
  * of {@link ChannelConfig} and may depend on the nature of the transport it belongs

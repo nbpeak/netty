@@ -474,13 +474,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
-
+            // peak:指定channel的eventloop
             AbstractChannel.this.eventLoop = eventLoop;
-
+            // peak:第一次执行时，没有线程，会返回false
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
-                try {
+                try {// 启动eventloop线程
                     eventLoop.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -506,14 +506,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
-                doRegister();
+                doRegister();// peak:将channel注册到selector
                 neverRegistered = false;
                 registered = true;
 
                 // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
                 // user may already fire events through the pipeline in the ChannelFutureListener.
                 pipeline.invokeHandlerAddedIfNeeded();
-
+                // peak:触发future的监听，如果调了bind方法，会调AbstractBootstrap.doBind中添加的Listener
                 safeSetSuccess(promise);
                 pipeline.fireChannelRegistered();
                 // Only fire a channelActive if the channel has never been registered. This prevents firing

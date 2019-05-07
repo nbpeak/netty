@@ -39,7 +39,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-/**
+/**peak:管道链，链中有一个头和尾<br/>
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
@@ -61,8 +61,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
-    final AbstractChannelHandlerContext head;
-    final AbstractChannelHandlerContext tail;
+    final AbstractChannelHandlerContext head;// peak:pipline中的头
+    final AbstractChannelHandlerContext tail;// peak:pipline中的尾巴
 
     private final Channel channel;
     private final ChannelFuture succeededFuture;
@@ -194,16 +194,16 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(String name, ChannelHandler handler) {
         return addLast(null, name, handler);
     }
-
+    /** peak:接收一个ChannelHandler，将此handler防在一个新的context中，添加到链的尾部 */
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
 
-            newCtx = newContext(group, filterName(name, handler), handler);
+            newCtx = newContext(group, filterName(name, handler), handler);// 使用ChannelHandler创建一个新的Context
 
-            addLast0(newCtx);
+            addLast0(newCtx);// 将包含了ChannelHandler的Context加到最后
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we add the context to the pipeline and add a task that will call
@@ -223,13 +223,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         callHandlerAdded0(newCtx);
         return this;
     }
-
+    /** peak:将新的context加到链的尾部 */
     private void addLast0(AbstractChannelHandlerContext newCtx) {
-        AbstractChannelHandlerContext prev = tail.prev;
-        newCtx.prev = prev;
-        newCtx.next = tail;
-        prev.next = newCtx;
-        tail.prev = newCtx;
+        AbstractChannelHandlerContext prev = tail.prev;// 取出尾巴前面一个，即倒数第二个
+        newCtx.prev = prev;// 将新context的前面一个指向尾巴的前一个
+        newCtx.next = tail;// 将新context的后一个指向尾巴
+        prev.next = newCtx;// 将前面倒数第二个的下一个指向新的context
+        tail.prev = newCtx;// 将尾巴的前一个指向新的context，使新的context成为倒数第二
     }
 
     @Override
@@ -1183,7 +1183,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     protected void onUnhandledInboundChannelInactive() {
     }
 
-    /**
+    /**peak:当事件消息达到pipeline的尾端时，释放消息<br/>
      * Called once a message hit the end of the {@link ChannelPipeline} without been handled by the user
      * in {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)}. This method is responsible
      * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
@@ -1194,7 +1194,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
                             "Please check your pipeline configuration.", msg);
         } finally {
-            ReferenceCountUtil.release(msg);
+            ReferenceCountUtil.release(msg);// 释放buf的引用
         }
     }
 
