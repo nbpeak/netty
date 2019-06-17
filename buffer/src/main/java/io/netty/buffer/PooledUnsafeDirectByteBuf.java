@@ -32,12 +32,12 @@ final class PooledUnsafeDirectByteBuf extends PooledByteBuf<ByteBuffer> {
     private static final Recycler<PooledUnsafeDirectByteBuf> RECYCLER = new Recycler<PooledUnsafeDirectByteBuf>() {
         @Override// peak:调RECYCLER.get()时，线程栈中没有可用复用的，会调newObject。创建的buf是空的
         protected PooledUnsafeDirectByteBuf newObject(Handle<PooledUnsafeDirectByteBuf> handle) {
-            return new PooledUnsafeDirectByteBuf(handle, 0);
+            return new PooledUnsafeDirectByteBuf(handle, 0);// peak：创建一个新的buf对象
         }
     };
 
     static PooledUnsafeDirectByteBuf newInstance(int maxCapacity) {
-        PooledUnsafeDirectByteBuf buf = RECYCLER.get();// RECYCLER：回收机制
+        PooledUnsafeDirectByteBuf buf = RECYCLER.get();// peak：从当前线程的回收栈取buf，没有可用的就会创建一个新的
         buf.reuse(maxCapacity);// 取出来的可能是之前的buf，使用前清理一下
         return buf;
     }

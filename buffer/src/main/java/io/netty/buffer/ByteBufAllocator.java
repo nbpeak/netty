@@ -15,7 +15,7 @@
  */
 package io.netty.buffer;
 
-/**
+/**缓冲区分配器<br/>
  * Implementations are responsible to allocate buffers. Implementations of this interface are expected to be
  * thread-safe.
  */
@@ -42,7 +42,7 @@ public interface ByteBufAllocator {
      */
     ByteBuf buffer(int initialCapacity, int maxCapacity);
 
-    /**
+    /**分配的缓冲区用于I/O<br/>
      * Allocate a {@link ByteBuf}, preferably a direct buffer which is suitable for I/O.
      */
     ByteBuf ioBuffer();
@@ -57,7 +57,7 @@ public interface ByteBufAllocator {
      */
     ByteBuf ioBuffer(int initialCapacity, int maxCapacity);
 
-    /**
+    /**分配一个堆内缓冲区<br/>
      * Allocate a heap {@link ByteBuf}.
      */
     ByteBuf heapBuffer();
@@ -73,7 +73,7 @@ public interface ByteBufAllocator {
      */
     ByteBuf heapBuffer(int initialCapacity, int maxCapacity);
 
-    /**
+    /**分配一个堆外缓冲区<br/>
      * Allocate a direct {@link ByteBuf}.
      */
     ByteBuf directBuffer();
@@ -89,7 +89,7 @@ public interface ByteBufAllocator {
      */
     ByteBuf directBuffer(int initialCapacity, int maxCapacity);
 
-    /**
+    /** 分配一个复合缓冲区<br/>
      * Allocate a {@link CompositeByteBuf}.
      * If it is a direct or heap buffer depends on the actual implementation.
      */

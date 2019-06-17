@@ -29,7 +29,6 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
-
 /**
  * peak:堆内ByteBuf，内部就是一个数组
  * Big endian Java heap buffer implementation. It is recommended to use

@@ -201,21 +201,21 @@ final class PoolThreadCache {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     boolean add(PoolArena<?> area, PoolChunk chunk, ByteBuffer nioBuffer,
                 long handle, int normCapacity, SizeClass sizeClass) {
-        MemoryRegionCache<?> cache = cache(area, normCapacity, sizeClass);
-        if (cache == null) {
+        MemoryRegionCache<?> cache = cache(area, normCapacity, sizeClass);// peak: 获取缓存格子对象
+        if (cache == null) {// 没有找到对应的格子，不能被缓存
             return false;
         }
-        return cache.add(chunk, nioBuffer, handle);
+        return cache.add(chunk, nioBuffer, handle);// 进缓存
     }
 
     private MemoryRegionCache<?> cache(PoolArena<?> area, int normCapacity, SizeClass sizeClass) {
         switch (sizeClass) {
         case Normal:
-            return cacheForNormal(area, normCapacity);
+            return cacheForNormal(area, normCapacity);// peak: 根据容量获取normal中的格子对象
         case Small:
-            return cacheForSmall(area, normCapacity);
+            return cacheForSmall(area, normCapacity);// 根据容量获取small中的格子对象
         case Tiny:
-            return cacheForTiny(area, normCapacity);
+            return cacheForTiny(area, normCapacity);// 根据容量获取tiny中的格子对象
         default:
             throw new Error();
         }
@@ -305,25 +305,25 @@ final class PoolThreadCache {
     }
 
     private MemoryRegionCache<?> cacheForTiny(PoolArena<?> area, int normCapacity) {
-        int idx = PoolArena.tinyIdx(normCapacity);
+        int idx = PoolArena.tinyIdx(normCapacity);// peak: 根据容量计算出因该使用tiny的哪个格子
         if (area.isDirect()) {
-            return cache(tinySubPageDirectCaches, idx);
+            return cache(tinySubPageDirectCaches, idx);// 获取格子的对象
         }
         return cache(tinySubPageHeapCaches, idx);
     }
 
     private MemoryRegionCache<?> cacheForSmall(PoolArena<?> area, int normCapacity) {
-        int idx = PoolArena.smallIdx(normCapacity);
+        int idx = PoolArena.smallIdx(normCapacity);// peak: 根据容量计算出因该使用small的哪个格子
         if (area.isDirect()) {
-            return cache(smallSubPageDirectCaches, idx);
+            return cache(smallSubPageDirectCaches, idx);// 获取格子的对象
         }
         return cache(smallSubPageHeapCaches, idx);
     }
 
     private MemoryRegionCache<?> cacheForNormal(PoolArena<?> area, int normCapacity) {
         if (area.isDirect()) {
-            int idx = log2(normCapacity >> numShiftsNormalDirect);
-            return cache(normalDirectCaches, idx);
+            int idx = log2(normCapacity >> numShiftsNormalDirect);// peak: 根据容量计算出因该使用small的哪个格子
+            return cache(normalDirectCaches, idx);// 获取格子的对象
         }
         int idx = log2(normCapacity >> numShiftsNormalHeap);
         return cache(normalHeapCaches, idx);
@@ -333,7 +333,7 @@ final class PoolThreadCache {
         if (cache == null || idx > cache.length - 1) {
             return null;
         }
-        return cache[idx];
+        return cache[idx];// peak:返回缓存格子的引用
     }
 
     /**
@@ -390,8 +390,8 @@ final class PoolThreadCache {
         @SuppressWarnings("unchecked")
         public final boolean add(PoolChunk<T> chunk, ByteBuffer nioBuffer, long handle) {
             Entry<T> entry = newEntry(chunk, nioBuffer, handle);
-            boolean queued = queue.offer(entry);
-            if (!queued) {
+            boolean queued = queue.offer(entry);// peak: 放入缓存队列
+            if (!queued) {// 队列满后，继续再放会失败
                 // If it was not possible to cache the chunk, immediately recycle the entry
                 entry.recycle();
             }

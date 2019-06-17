@@ -78,7 +78,7 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
         // a fast path for most common cases where the ref count is 1, 2, 3 or 4.
         return rawCnt == 2 || rawCnt == 4 || rawCnt == 6 || rawCnt == 8 || (rawCnt & 1) == 0;
     }
-
+    // peak: 返回该对象的引用计数。如果为0，则表示该对象已解除分配，是时候释放了
     @Override
     public int refCnt() {
         return realRefCnt(refCntUpdater.get(this));
@@ -90,7 +90,7 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
     protected final void setRefCnt(int newRefCnt) {
         refCntUpdater.set(this, newRefCnt << 1); // overflow OK here
     }
-
+    // peak: 引用计数+1
     @Override
     public ByteBuf retain() {
         return retain0(1);
@@ -140,12 +140,12 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
 
     private boolean release0(int decrement) {
         int rawCnt = nonVolatileRawCnt(), realCnt = toLiveRealCnt(rawCnt, decrement);
-        if (decrement == realCnt) {// peak:
+        if (decrement == realCnt) {// peak: 如果要减的数量和目前的引用数量相等，代表要释放了
             if (refCntUpdater.compareAndSet(this, rawCnt, 1)) {
-                deallocate();
+                deallocate();// 执行释放
                 return true;
             }
-            return retryRelease0(decrement);
+            return retryRelease0(decrement); // 自旋锁重试
         }
         return releaseNonFinal0(decrement, rawCnt, realCnt);
     }
