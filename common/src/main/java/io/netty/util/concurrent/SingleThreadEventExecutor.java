@@ -162,7 +162,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
         this.executor = ObjectUtil.checkNotNull(executor, "executor");
-        taskQueue = newTaskQueue(this.maxPendingTasks);
+        taskQueue = newTaskQueue(this.maxPendingTasks);// peak:初始化任务队列
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
     }
 
@@ -745,7 +745,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
         return isTerminated();
     }
-    /** peak:执行任务，如果当前的线程是此eventloop的线程，就会将任务防在任务队列中，否则会开启一个线程 */
+    /** peak:执行任务，如果当前的线程是此eventloop的线程，就会将任务放在任务队列中，否则会开启一个线程 */
     @Override
     public void execute(Runnable task) {
         if (task == null) {

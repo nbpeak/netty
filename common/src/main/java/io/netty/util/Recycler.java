@@ -159,7 +159,7 @@ public abstract class Recycler<T> {
         }
         Stack<T> stack = threadLocal.get();// peak:在线程变量中维护了一个栈
         DefaultHandle<T> handle = stack.pop(); // 弹出一个handle对象
-        if (handle == null) {
+        if (handle == null) {// peak: 回收栈中没有可用的对象
             handle = stack.newHandle();// 创建一个新Handle
             handle.value = newObject(handle);
         }
