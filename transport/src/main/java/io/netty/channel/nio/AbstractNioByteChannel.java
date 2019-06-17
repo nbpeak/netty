@@ -37,7 +37,7 @@ import java.nio.channels.SelectionKey;
 
 import static io.netty.channel.internal.ChannelUtils.WRITE_STATUS_SNDBUF_FULL;
 
-/**
+/** NioSocketChannel的父类
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on bytes.
  */
 public abstract class AbstractNioByteChannel extends AbstractNioChannel {

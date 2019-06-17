@@ -29,7 +29,7 @@ import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/** NioServerSocketChannel的父类
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on messages.
  */
 public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
